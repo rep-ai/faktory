@@ -1,0 +1,75 @@
+apiVersion: garden.io/v0
+kind: Module
+description: Faktory persistent background job server
+type: helm
+name: faktory
+repo: https://adwerx.github.io/charts # https://github.com/AdWerx/charts/blob/master/faktory/README.md
+chart: faktory
+version: 0.11.1
+disabled: ${var.cloud != 'gcp'}
+timeout: 900
+values:
+  image:
+    tag: "1.5.1"
+  password: ${providers.terraform.outputs.faktory_password}
+  persistence:
+    enabled: true
+    size: 8Gi
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 300m
+      memory: 50Mi
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: cloud.google.com/gke-preemptible
+            operator: DoesNotExist
+  metrics:
+    enabled: true
+  ui:
+    # service:
+    #   type: NodePort
+    ingress:
+      enabled: true
+      annotations:
+        kubernetes.io/ingressClass: nginx-curv
+      hosts:
+        - host: faktory.${providers.kubernetes.outputs.default-hostname}
+          paths: [/]
+      tls:
+        - hosts:
+            - faktory.${providers.kubernetes.outputs.default-hostname}
+          secretName: ${providers.terraform.outputs.tls_certificate_name}
+
+---
+
+apiVersion: garden.io/v0
+kind: Module
+description: Faktory metrics exporter service
+type: kubernetes
+name: faktory-metrics
+disabled: ${var.cloud != 'gcp'}
+dependencies:
+  - faktory
+manifests:
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: faktory-metrics
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '9386' # 80
+    spec:
+      type: ClusterIP
+      selector:
+        app.kubernetes.io/instance: faktory
+        app.kubernetes.io/name: faktory
+      ports:
+        - name: metrics
+          port: 80
+          targetPort: metrics # 9386
