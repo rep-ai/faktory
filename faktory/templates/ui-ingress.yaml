@@ -2,7 +2,14 @@
 # use port-forward or create own ingress
 {{- if .Values.ui.ingress.enabled -}}
 {{- $fullName := include "faktory.fullname" . }}
+{{- $kubeVersion := .Capabilities.KubeVersion.Version }}
+{{- if semverCompare ">= 1.19.0-0" $kubeVersion }}
+apiVersion: networking.k8s.io/v1
+{{ else if .Capabilities.APIVersions.Has "networking.k8s.io/v1beta1" }}
+apiVersion: networking.k8s.io/v1beta1
+{{ else }}
 apiVersion: extensions/v1beta1
+{{ end -}}
 kind: Ingress
 metadata:
   name: {{ $fullName }}
@@ -32,10 +39,13 @@ spec:
       http:
         paths:
         {{- range .paths }}
-          - path: {{ . }}
-            backend:
-              serviceName: {{ $fullName }}-ui
-              servicePort: http-ui
+        - pathType: Prefix
+          path: {{ . }}
+          backend:
+            service:
+              name: {{ $fullName }}-ui
+              port: 
+                number: 7420
         {{- end }}
   {{- end }}
 {{- end }}
