@@ -37,7 +37,7 @@ values:
     ingress:
       enabled: true
       annotations:
-        kubernetes.io/ingressClass: nginx-curv
+        kubernetes.io/ingressClass: nginx
       hosts:
         - host: faktory.${providers.kubernetes.outputs.default-hostname}
           paths: [/]
