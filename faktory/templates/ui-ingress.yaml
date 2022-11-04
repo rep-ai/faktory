@@ -3,13 +3,7 @@
 {{- if .Values.ui.ingress.enabled -}}
 {{- $fullName := include "faktory.fullname" . }}
 {{- $kubeVersion := .Capabilities.KubeVersion.Version }}
-{{- if semverCompare ">= 1.19.0-0" $kubeVersion }}
 apiVersion: networking.k8s.io/v1
-{{ else if .Capabilities.APIVersions.Has "networking.k8s.io/v1beta1" }}
-apiVersion: networking.k8s.io/v1beta1
-{{ else }}
-apiVersion: extensions/v1beta1
-{{ end -}}
 kind: Ingress
 metadata:
   name: {{ $fullName }}
