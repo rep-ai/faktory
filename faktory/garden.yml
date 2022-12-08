@@ -39,11 +39,11 @@ values:
       annotations:
         kubernetes.io/ingress.class: nginx
       hosts:
-        - host: faktory.${providers.kubernetes.outputs.default-hostname}
+        - host: ${var.faktory_hostname}
           paths: [/]
       tls:
         - hosts:
-            - faktory.${providers.kubernetes.outputs.default-hostname}
+            - ${var.faktory_hostname}
           secretName: ${providers.terraform.outputs.tls_certificate_name}
 
 ---
