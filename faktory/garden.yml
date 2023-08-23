@@ -36,8 +36,8 @@ values:
     #   type: NodePort
     ingress:
       enabled: true
-      annotations:
-        kubernetes.io/ingress.class: nginx
+      spec:
+        ingressClassName: nginx
       hosts:
         - host: ${var.faktory_hostname}
           paths: [/]
